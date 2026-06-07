@@ -6,13 +6,42 @@ import { NearbyStores } from "./components/NearbyStores";
 import { BudgetTracker } from "./components/BudgetTracker";
 import { FoodMap } from "./components/FoodMap";
 import { AddStoreModal } from "./components/AddStoreModal";
-import { Leaf, ChevronRight, Bell, Search } from "lucide-react";
+import { ViewStoreModal } from "./components/ViewStoreModal";
+import { MonthPlanModal } from "./components/MonthPlanModal";
+import { NOTIFICATIONS, RECIPES, STORES } from "./components/data";
+import { Leaf, ChevronRight, Bell, Search, XCircle, ChevronDown } from "lucide-react";
 
 /* MARKER-MAKE-KIT-INVOKED */
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [modalOpen, setModalOpen] = useState(false);
+  
+  // Custom interactive states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [notificationsList, setNotificationsList] = useState(NOTIFICATIONS);
+  const [monthPlanOpen, setMonthPlanOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<any>(null);
+
+  // Search filter logic
+  const matchedRecipes = searchQuery
+    ? RECIPES.filter(
+        (r) =>
+          r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.ingredients.some((i) => i.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
+
+  const matchedStoreItems = searchQuery
+    ? STORES.flatMap((store) =>
+        (store.items || [])
+          .filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          .map((item) => ({ ...item, store }))
+      )
+    : [];
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f4f6f4", fontFamily: "'Inter', sans-serif" }}>
@@ -49,6 +78,7 @@ export default function App() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            
             {/* Search bar */}
             <div
               style={{
@@ -59,41 +89,259 @@ export default function App() {
                 border: "1px solid rgba(0,0,0,0.08)",
                 borderRadius: 12,
                 padding: "8px 14px",
-                width: 200,
-              }}
-            >
-              <Search size={14} color="#9ca3af" />
-              <span style={{ fontSize: 13, color: "#9ca3af" }}>Search foods...</span>
-            </div>
-            {/* Bell */}
-            <button
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
+                width: 220,
                 position: "relative",
               }}
             >
-              <Bell size={16} color="#6b7280" />
-              <div
+              <Search size={14} color="#9ca3af" />
+              <input
+                type="text"
+                placeholder="Search foods..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(e.target.value.length > 0);
+                }}
+                onFocus={() => {
+                  if (searchQuery.length > 0) setSearchOpen(true);
+                }}
                 style={{
-                  position: "absolute",
-                  top: 7,
-                  right: 7,
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: "#84CC16",
-                  border: "1.5px solid #f4f6f4",
+                  border: "none",
+                  background: "transparent",
+                  fontSize: 13,
+                  outline: "none",
+                  width: "100%",
+                  color: "#111827",
+                  padding: 0,
                 }}
               />
-            </button>
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchOpen(false);
+                  }}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <XCircle size={14} color="#9ca3af" />
+                </button>
+              )}
+
+              {/* Search dropdown suggestions */}
+              {searchOpen && (
+                <>
+                  <div
+                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                    onClick={() => setSearchOpen(false)}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 8px)",
+                      right: 0,
+                      width: 300,
+                      background: "#ffffff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 14,
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                      zIndex: 50,
+                      maxHeight: 320,
+                      overflowY: "auto",
+                      padding: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                    }}
+                  >
+                    {/* Recipes */}
+                    {matchedRecipes.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", marginBottom: 6, letterSpacing: "0.5px" }}>
+                          MATCHING RECIPES
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {matchedRecipes.map((r) => (
+                            <div
+                              key={r.name}
+                              onClick={() => {
+                                setMonthPlanOpen(true);
+                                setSearchOpen(false);
+                              }}
+                              style={{
+                                padding: "6px 8px",
+                                borderRadius: 8,
+                                background: "#f9fafb",
+                                cursor: "pointer",
+                                fontSize: 12,
+                                color: "#111827",
+                                fontWeight: 500,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdf4")}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = "#f9fafb")}
+                            >
+                              <span>📖 {r.name}</span>
+                              <ChevronRight size={12} color="#9ca3af" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Store items */}
+                    {matchedStoreItems.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", marginBottom: 6, letterSpacing: "0.5px" }}>
+                          LOCAL STORES SELLING
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {matchedStoreItems.map((item, idx) => (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                setSelectedStore(item.store);
+                                setSearchOpen(false);
+                              }}
+                              style={{
+                                padding: "6px 8px",
+                                borderRadius: 8,
+                                background: "#f9fafb",
+                                cursor: "pointer",
+                                fontSize: 12,
+                                color: "#111827",
+                                fontWeight: 500,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdf4")}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = "#f9fafb")}
+                            >
+                              <span>🛒 {item.name}</span>
+                              <span style={{ fontSize: 11, color: "#6b7280" }}>
+                                {item.store.name} · {item.price}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {matchedRecipes.length === 0 && matchedStoreItems.length === 0 && (
+                      <div style={{ fontSize: 12, color: "#6b7280", textAlign: "center", padding: "12px 0" }}>
+                        No results for "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Bell Notifications */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => {
+                  setNotificationsOpen((o) => !o);
+                  setHasNewNotifications(false);
+                }}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  border: "1px solid rgba(0,0,0,0.08)",
+                  background: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <Bell size={16} color="#6b7280" />
+                {hasNewNotifications && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 7,
+                      right: 7,
+                      width: 7,
+                      height: 7,
+                      borderRadius: "50%",
+                      background: "#84CC16",
+                      border: "1.5px solid #f4f6f4",
+                    }}
+                  />
+                )}
+              </button>
+
+              {notificationsOpen && (
+                <>
+                  <div
+                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                    onClick={() => setNotificationsOpen(false)}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 8px)",
+                      right: 0,
+                      width: 320,
+                      background: "#ffffff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 16,
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                      zIndex: 50,
+                      padding: "16px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, borderBottom: "1px solid #f1f5f1", paddingBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Notifications</span>
+                      <button
+                        onClick={() => {
+                          setNotificationsList((prev) => prev.map((n) => ({ ...n, unread: false })));
+                        }}
+                        style={{ border: "none", background: "none", color: "#84CC16", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        Mark all read
+                      </button>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 240, overflowY: "auto" }}>
+                      {notificationsList.map((notif) => (
+                        <div
+                          key={notif.id}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: 10,
+                            background: notif.unread ? "#f0fdf4" : "#f9fafb",
+                            border: "1px solid #f1f5f1",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 2 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                              {notif.type === "promo" ? "🎁 " : notif.type === "success" ? "✅ " : "💡 "}
+                              {notif.title}
+                            </span>
+                            <span style={{ fontSize: 10, color: "#9ca3af" }}>{notif.time}</span>
+                          </div>
+                          <p style={{ fontSize: 11, color: "#4b5563", lineHeight: 1.4, margin: 0 }}>
+                            {notif.message}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Avatar */}
             <div
               style={{
@@ -286,7 +534,7 @@ export default function App() {
 
               {/* Meal plan + Food Map row */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                <MealPlan />
+                <MealPlan onViewFullPlan={() => setMonthPlanOpen(true)} />
                 <FoodMap />
               </div>
 
@@ -294,7 +542,7 @@ export default function App() {
               <BudgetTracker />
 
               {/* Nearby Stores */}
-              <NearbyStores />
+              <NearbyStores onViewStore={setSelectedStore} />
             </>
           )}
 
@@ -304,7 +552,7 @@ export default function App() {
                 <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111827", marginBottom: 4 }}>Nearby Stores</h2>
                 <p style={{ fontSize: 14, color: "#6b7280" }}>5 stores found in Mellow, CA within 2 miles</p>
               </div>
-              <NearbyStores />
+              <NearbyStores onViewStore={setSelectedStore} />
             </div>
           )}
 
@@ -312,7 +560,7 @@ export default function App() {
             <div style={{ maxWidth: 560 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111827", marginBottom: 4 }}>Meal Planner</h2>
               <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 20 }}>Your personalized 7-day nutrition plan</p>
-              <MealPlan />
+              <MealPlan onViewFullPlan={() => setMonthPlanOpen(true)} />
             </div>
           )}
 
@@ -374,7 +622,10 @@ export default function App() {
         </div>
       </main>
 
+      {/* Modal overlays */}
       <AddStoreModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <MonthPlanModal open={monthPlanOpen} onClose={() => setMonthPlanOpen(false)} />
+      <ViewStoreModal store={selectedStore} onClose={() => setSelectedStore(null)} />
     </div>
   );
 }

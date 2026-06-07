@@ -33,7 +33,7 @@ function CalBar({ eaten, target }: { eaten: number; target: number }) {
   );
 }
 
-export function MealPlan() {
+export function MealPlan({ onViewFullPlan }: { onViewFullPlan?: () => void }) {
   const [selected, setSelected] = useState("Mon");
   const [calorieTarget, setCalorieTarget] = useState(2100);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -263,6 +263,7 @@ export function MealPlan() {
       </div>
 
       <button
+        onClick={onViewFullPlan}
         style={{
           display: "flex",
           alignItems: "center",

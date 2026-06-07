@@ -21,7 +21,7 @@ function ScoreBadge({ score }: { score: number }) {
   );
 }
 
-export function NearbyStores() {
+export function NearbyStores({ onViewStore }: { onViewStore?: (store: any) => void }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -136,6 +136,7 @@ export function NearbyStores() {
                 </span>
               </div>
               <button
+                onClick={() => onViewStore && onViewStore(store)}
                 style={{
                   padding: "7px 14px",
                   borderRadius: 10,
