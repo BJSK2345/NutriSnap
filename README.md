@@ -1,11 +1,6 @@
 
-  # Design NutriSnap Dashboard
+# What NutriSnap is
 
-  This is a code bundle for Design NutriSnap Dashboard. The original project is available at https://www.figma.com/design/Ef7dMaJb7ShwMTEVncOmF2/Design-NutriSnap-Dashboard.
-
-  ## Running the code
-
-  Run `npm i` to install the dependencies.
-
-  Run `npm run dev` to start the development server.
+NutriSnap helps users eat healthier without exceeding their food budget. The platform displays nearby stores, affordable food options, and estimated prices, allowing users to make informed purchasing decisions.
+Users can explore available foods, compare costs between stores, and build meal plans that stay within a specified budget. The goal is to make healthy eating more accessible for families, students, and individuals living in areas with limited food options.
   
